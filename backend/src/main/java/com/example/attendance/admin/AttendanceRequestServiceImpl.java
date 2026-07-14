@@ -8,6 +8,7 @@ import com.example.attendance.admin.dto.AttendanceRequestResponse;
 import com.example.attendance.common.enums.ApprovalStatus;
 import com.example.attendance.common.enums.AttendanceRequestType;
 import com.example.attendance.common.exception.BusinessException;
+import com.example.attendance.employee.EmployeeRepository;
 import com.example.attendance.timerecord.TimeRecord;
 import com.example.attendance.timerecord.TimeRecordRepository;
 
@@ -21,12 +22,15 @@ public class AttendanceRequestServiceImpl implements AttendanceRequestService {
 
     private final AttendanceRequestRepository attendanceRequestRepository;
     private final TimeRecordRepository timeRecordRepository;
+    private final EmployeeRepository employeeRepository;
 
     public AttendanceRequestServiceImpl(
             AttendanceRequestRepository attendanceRequestRepository,
-            TimeRecordRepository timeRecordRepository) {
+            TimeRecordRepository timeRecordRepository,
+            EmployeeRepository employeeRepository) {
         this.attendanceRequestRepository = attendanceRequestRepository;
         this.timeRecordRepository = timeRecordRepository;
+        this.employeeRepository = employeeRepository;
     }
 
     @Override
@@ -60,6 +64,8 @@ public class AttendanceRequestServiceImpl implements AttendanceRequestService {
                 .orElseThrow(() -> new BusinessException(
                         HttpStatus.NOT_FOUND, "REQUEST_NOT_FOUND", "申請が見つかりません"));
 
+        verifyDepartmentAccess(approverId, request.getEmployeeId());
+
         if (request.getStatus() != ApprovalStatus.PENDING) {
             throw new BusinessException(
                     HttpStatus.CONFLICT, "ALREADY_PROCESSED", "この申請は既に処理済みです");
@@ -80,6 +86,8 @@ public class AttendanceRequestServiceImpl implements AttendanceRequestService {
         var request = attendanceRequestRepository.findById(requestId)
                 .orElseThrow(() -> new BusinessException(
                         HttpStatus.NOT_FOUND, "REQUEST_NOT_FOUND", "申請が見つかりません"));
+
+        verifyDepartmentAccess(approverId, request.getEmployeeId());
 
         if (request.getStatus() != ApprovalStatus.PENDING) {
             throw new BusinessException(
@@ -126,6 +134,20 @@ public class AttendanceRequestServiceImpl implements AttendanceRequestService {
     public List<AttendanceRequestResponse> getPendingByEmployeeIds(List<Long> employeeIds) {
         return attendanceRequestRepository.findByEmployeeIdInAndStatus(employeeIds, ApprovalStatus.PENDING)
                 .stream().map(this::toResponse).toList();
+    }
+
+    private void verifyDepartmentAccess(Long approverId, Long targetEmployeeId) {
+        var approver = employeeRepository.findById(approverId)
+                .orElseThrow(() -> new BusinessException(
+                        HttpStatus.NOT_FOUND, "EMPLOYEE_NOT_FOUND", "承認者が見つかりません"));
+        var target = employeeRepository.findById(targetEmployeeId)
+                .orElseThrow(() -> new BusinessException(
+                        HttpStatus.NOT_FOUND, "EMPLOYEE_NOT_FOUND", "対象社員が見つかりません"));
+
+        if (!approver.getDepartmentId().equals(target.getDepartmentId())) {
+            throw new BusinessException(
+                    HttpStatus.FORBIDDEN, "DEPARTMENT_MISMATCH", "他部署の申請は操作できません");
+        }
     }
 
     private AttendanceRequestResponse toResponse(AttendanceRequest entity) {

@@ -21,7 +21,7 @@ class JwtTokenProviderTest {
     @Test
     @DisplayName("トークンを生成できる")
     void generateToken_returnsNonEmptyString() {
-        String token = provider.generateToken(1L, "EMP001");
+        String token = provider.generateToken(1L, "EMP001", "EMPLOYEE");
 
         assertThat(token).isNotBlank();
     }
@@ -29,7 +29,7 @@ class JwtTokenProviderTest {
     @Test
     @DisplayName("トークンからemployeeIdを取得できる")
     void getEmployeeId_validToken_returnsId() {
-        String token = provider.generateToken(42L, "EMP042");
+        String token = provider.generateToken(42L, "EMP042", "EMPLOYEE");
 
         Long employeeId = provider.getEmployeeId(token);
 
@@ -39,7 +39,7 @@ class JwtTokenProviderTest {
     @Test
     @DisplayName("トークンからemployeeCodeを取得できる")
     void getEmployeeCode_validToken_returnsCode() {
-        String token = provider.generateToken(1L, "MGR001");
+        String token = provider.generateToken(1L, "MGR001", "MANAGER");
 
         String code = provider.getEmployeeCode(token);
 
@@ -49,7 +49,7 @@ class JwtTokenProviderTest {
     @Test
     @DisplayName("有効なトークンの検証がtrueを返す")
     void validateToken_validToken_returnsTrue() {
-        String token = provider.generateToken(1L, "EMP001");
+        String token = provider.generateToken(1L, "EMP001", "EMPLOYEE");
 
         assertThat(provider.validateToken(token)).isTrue();
     }
@@ -72,7 +72,7 @@ class JwtTokenProviderTest {
         var expiredProvider = new JwtTokenProvider(
                 "test-secret-key-that-is-at-least-256-bits-long-for-hmac-sha-algorithms",
                 -1000L);
-        String token = expiredProvider.generateToken(1L, "EMP001");
+        String token = expiredProvider.generateToken(1L, "EMP001", "EMPLOYEE");
 
         assertThat(provider.validateToken(token)).isFalse();
     }

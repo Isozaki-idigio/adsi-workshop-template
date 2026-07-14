@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath: process.env.SAGEMAKER === '1'
-    ? '/codeeditor/default/absports/3000'
-    : '',
+  basePath: '',
   async rewrites() {
     return [
       {

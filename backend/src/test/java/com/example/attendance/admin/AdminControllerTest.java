@@ -73,6 +73,7 @@ class AdminControllerTest {
         when(jwtTokenProvider.validateToken("mgr-token")).thenReturn(true);
         when(jwtTokenProvider.getEmployeeId("mgr-token")).thenReturn(1L);
         when(jwtTokenProvider.getEmployeeCode("mgr-token")).thenReturn("MGR001");
+        when(jwtTokenProvider.getRole("mgr-token")).thenReturn("MANAGER");
 
         var manager = Employee.builder()
                 .id(1L).employeeCode("MGR001").name("山田太郎")
@@ -85,6 +86,7 @@ class AdminControllerTest {
         when(jwtTokenProvider.validateToken("emp-token")).thenReturn(true);
         when(jwtTokenProvider.getEmployeeId("emp-token")).thenReturn(2L);
         when(jwtTokenProvider.getEmployeeCode("emp-token")).thenReturn("EMP001");
+        when(jwtTokenProvider.getRole("emp-token")).thenReturn("EMPLOYEE");
 
         var employee = Employee.builder()
                 .id(2L).employeeCode("EMP001").name("鈴木花子")

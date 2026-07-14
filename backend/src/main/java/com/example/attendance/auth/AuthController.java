@@ -35,7 +35,7 @@ public class AuthController {
         EmployeeResponse employee = employeeService.authenticate(
                 request.employeeCode(), request.password());
 
-        String token = jwtTokenProvider.generateToken(employee.id(), employee.employeeCode());
+        String token = jwtTokenProvider.generateToken(employee.id(), employee.employeeCode(), employee.role().name());
 
         return ResponseEntity.ok(new LoginResponse(token, employee));
     }

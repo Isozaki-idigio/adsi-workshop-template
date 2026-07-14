@@ -47,6 +47,7 @@ class ExportControllerTest {
         when(jwtTokenProvider.validateToken("test-token")).thenReturn(true);
         when(jwtTokenProvider.getEmployeeId("test-token")).thenReturn(1L);
         when(jwtTokenProvider.getEmployeeCode("test-token")).thenReturn("MGR001");
+        when(jwtTokenProvider.getRole("test-token")).thenReturn("MANAGER");
     }
 
     @Test

@@ -44,7 +44,7 @@ class AuthControllerTest {
     void login_validCredentials_returnsToken() throws Exception {
         var employee = new EmployeeResponse(1L, "EMP001", "田中太郎", "tanaka@example.com", "開発部", Role.EMPLOYEE);
         when(employeeService.authenticate("EMP001", "password123")).thenReturn(employee);
-        when(jwtTokenProvider.generateToken(1L, "EMP001")).thenReturn("jwt-token-here");
+        when(jwtTokenProvider.generateToken(1L, "EMP001", "EMPLOYEE")).thenReturn("jwt-token-here");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

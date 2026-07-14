@@ -14,6 +14,7 @@ import com.example.attendance.admin.dto.AttendanceRequestCreateRequest;
 import com.example.attendance.common.enums.ApprovalStatus;
 import com.example.attendance.common.enums.AttendanceRequestType;
 import com.example.attendance.common.exception.BusinessException;
+import com.example.attendance.employee.Employee;
 import com.example.attendance.timerecord.TimeRecord;
 import com.example.attendance.timerecord.TimeRecordRepository;
 
@@ -33,11 +34,21 @@ class AttendanceRequestServiceImplTest {
     @Mock
     private TimeRecordRepository timeRecordRepository;
 
+    @Mock
+    private com.example.attendance.employee.EmployeeRepository employeeRepository;
+
     private AttendanceRequestService service;
 
     @BeforeEach
     void setUp() {
-        service = new AttendanceRequestServiceImpl(attendanceRequestRepository, timeRecordRepository);
+        service = new AttendanceRequestServiceImpl(attendanceRequestRepository, timeRecordRepository, employeeRepository);
+    }
+
+    private void mockSameDepartment() {
+        var approver = Employee.builder().id(99L).departmentId(1L).build();
+        var target = Employee.builder().id(1L).departmentId(1L).build();
+        when(employeeRepository.findById(99L)).thenReturn(Optional.of(approver));
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(target));
     }
 
     @Test
@@ -82,6 +93,7 @@ class AttendanceRequestServiceImplTest {
                 .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).version(0L)
                 .build();
 
+        mockSameDepartment();
         when(attendanceRequestRepository.findById(1L)).thenReturn(Optional.of(request));
         when(timeRecordRepository.findById(10L)).thenReturn(Optional.of(timeRecord));
         when(attendanceRequestRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -105,6 +117,7 @@ class AttendanceRequestServiceImplTest {
                 .reason("追加").status(ApprovalStatus.PENDING).version(0L)
                 .build();
 
+        mockSameDepartment();
         when(attendanceRequestRepository.findById(2L)).thenReturn(Optional.of(request));
         when(attendanceRequestRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(timeRecordRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -126,6 +139,7 @@ class AttendanceRequestServiceImplTest {
                 .reason("修正").status(ApprovalStatus.PENDING).version(0L)
                 .build();
 
+        mockSameDepartment();
         when(attendanceRequestRepository.findById(1L)).thenReturn(Optional.of(request));
         when(attendanceRequestRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -145,6 +159,7 @@ class AttendanceRequestServiceImplTest {
                 .reason("修正").status(ApprovalStatus.APPROVED).version(0L)
                 .build();
 
+        mockSameDepartment();
         when(attendanceRequestRepository.findById(1L)).thenReturn(Optional.of(request));
 
         assertThatThrownBy(() -> service.approveRequest(99L, 1L))

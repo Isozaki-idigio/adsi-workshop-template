@@ -93,6 +93,8 @@ public class LeaveServiceImpl implements LeaveService {
                 .orElseThrow(() -> new BusinessException(
                         HttpStatus.NOT_FOUND, "REQUEST_NOT_FOUND", "休暇申請が見つかりません"));
 
+        verifyDepartmentAccess(approverId, leaveRequest.getEmployeeId());
+
         if (leaveRequest.getStatus() != ApprovalStatus.PENDING) {
             throw new BusinessException(
                     HttpStatus.CONFLICT, "ALREADY_PROCESSED", "この申請は既に処理済みです");
@@ -113,6 +115,8 @@ public class LeaveServiceImpl implements LeaveService {
                 .orElseThrow(() -> new BusinessException(
                         HttpStatus.NOT_FOUND, "REQUEST_NOT_FOUND", "休暇申請が見つかりません"));
 
+        verifyDepartmentAccess(approverId, leaveRequest.getEmployeeId());
+
         if (leaveRequest.getStatus() != ApprovalStatus.PENDING) {
             throw new BusinessException(
                     HttpStatus.CONFLICT, "ALREADY_PROCESSED", "この申請は既に処理済みです");
@@ -124,6 +128,20 @@ public class LeaveServiceImpl implements LeaveService {
 
         var saved = leaveRequestRepository.save(leaveRequest);
         return toResponse(saved);
+    }
+
+    private void verifyDepartmentAccess(Long approverId, Long targetEmployeeId) {
+        var approver = employeeRepository.findById(approverId)
+                .orElseThrow(() -> new BusinessException(
+                        HttpStatus.NOT_FOUND, "EMPLOYEE_NOT_FOUND", "承認者が見つかりません"));
+        var target = employeeRepository.findById(targetEmployeeId)
+                .orElseThrow(() -> new BusinessException(
+                        HttpStatus.NOT_FOUND, "EMPLOYEE_NOT_FOUND", "対象社員が見つかりません"));
+
+        if (!approver.getDepartmentId().equals(target.getDepartmentId())) {
+            throw new BusinessException(
+                    HttpStatus.FORBIDDEN, "DEPARTMENT_MISMATCH", "他部署の申請は操作できません");
+        }
     }
 
     @Override
