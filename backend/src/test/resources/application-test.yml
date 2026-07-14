@@ -10,7 +10,7 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
-    target: 2
+    target: 4
 
 jwt:
   secret: test-secret-key-that-is-at-least-256-bits-long-for-hmac-sha-algorithms

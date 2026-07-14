@@ -32,3 +32,20 @@ export interface ValidationErrorResponse {
   message: string;
   errors: { field: string; message: string }[];
 }
+
+export interface LeaveRequestResponse {
+  id: number;
+  leaveType: LeaveType;
+  startDate: string;
+  endDate: string;
+  days: number;
+  reason: string | null;
+  status: ApprovalStatus;
+  createdAt: string;
+}
+
+export interface LeaveBalanceResponse {
+  totalDays: number;
+  usedDays: number;
+  remainingDays: number;
+}
