@@ -1,6 +1,7 @@
 package com.example.attendance.leave;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -83,6 +84,53 @@ public class LeaveServiceImpl implements LeaveService {
             requests = leaveRequestRepository.findByEmployeeId(employeeId);
         }
         return requests.stream().map(this::toResponse).toList();
+    }
+
+    @Override
+    @Transactional
+    public LeaveRequestResponse approveLeave(Long approverId, Long requestId) {
+        var leaveRequest = leaveRequestRepository.findById(requestId)
+                .orElseThrow(() -> new BusinessException(
+                        HttpStatus.NOT_FOUND, "REQUEST_NOT_FOUND", "休暇申請が見つかりません"));
+
+        if (leaveRequest.getStatus() != ApprovalStatus.PENDING) {
+            throw new BusinessException(
+                    HttpStatus.CONFLICT, "ALREADY_PROCESSED", "この申請は既に処理済みです");
+        }
+
+        leaveRequest.setStatus(ApprovalStatus.APPROVED);
+        leaveRequest.setApproverId(approverId);
+        leaveRequest.setApprovedAt(LocalDateTime.now());
+
+        var saved = leaveRequestRepository.save(leaveRequest);
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public LeaveRequestResponse rejectLeave(Long approverId, Long requestId) {
+        var leaveRequest = leaveRequestRepository.findById(requestId)
+                .orElseThrow(() -> new BusinessException(
+                        HttpStatus.NOT_FOUND, "REQUEST_NOT_FOUND", "休暇申請が見つかりません"));
+
+        if (leaveRequest.getStatus() != ApprovalStatus.PENDING) {
+            throw new BusinessException(
+                    HttpStatus.CONFLICT, "ALREADY_PROCESSED", "この申請は既に処理済みです");
+        }
+
+        leaveRequest.setStatus(ApprovalStatus.REJECTED);
+        leaveRequest.setApproverId(approverId);
+        leaveRequest.setApprovedAt(LocalDateTime.now());
+
+        var saved = leaveRequestRepository.save(leaveRequest);
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LeaveRequestResponse> getPendingByEmployeeIds(List<Long> employeeIds) {
+        return leaveRequestRepository.findByEmployeeIdInAndStatus(employeeIds, ApprovalStatus.PENDING)
+                .stream().map(this::toResponse).toList();
     }
 
     private BigDecimal calculateDays(LeaveRequestCreateRequest request) {

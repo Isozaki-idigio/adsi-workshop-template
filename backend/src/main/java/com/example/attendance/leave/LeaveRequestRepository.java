@@ -23,4 +23,6 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
     BigDecimal sumApprovedDaysByEmployeeIdAndLeaveTypes(
             @Param("employeeId") Long employeeId,
             @Param("types") List<LeaveType> types);
+
+    List<LeaveRequest> findByEmployeeIdInAndStatus(List<Long> employeeIds, ApprovalStatus status);
 }

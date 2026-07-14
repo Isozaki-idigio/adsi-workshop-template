@@ -14,4 +14,10 @@ public interface LeaveService {
     LeaveBalanceResponse getBalance(Long employeeId);
 
     List<LeaveRequestResponse> getRequests(Long employeeId, ApprovalStatus status);
+
+    LeaveRequestResponse approveLeave(Long approverId, Long requestId);
+
+    LeaveRequestResponse rejectLeave(Long approverId, Long requestId);
+
+    List<LeaveRequestResponse> getPendingByEmployeeIds(List<Long> employeeIds);
 }
