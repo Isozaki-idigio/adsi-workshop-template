@@ -20,4 +20,10 @@ public interface TimeRecordRepository extends JpaRepository<TimeRecord, Long> {
             @Param("employeeId") Long employeeId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    List<TimeRecord> findByEmployeeIdAndWorkDateBetweenOrderByClockIn(
+            Long employeeId, LocalDate startDate, LocalDate endDate);
+
+    List<TimeRecord> findByEmployeeIdAndWorkDateOrderByClockIn(
+            Long employeeId, LocalDate workDate);
 }

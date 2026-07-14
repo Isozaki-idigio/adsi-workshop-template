@@ -7,8 +7,8 @@ import java.time.Duration;
 import java.time.YearMonth;
 import java.util.List;
 
-import com.example.attendance.attendance.TimeRecord;
-import com.example.attendance.attendance.TimeRecordRepository;
+import com.example.attendance.timerecord.TimeRecord;
+import com.example.attendance.timerecord.TimeRecordRepository;
 import com.example.attendance.employee.Employee;
 import com.example.attendance.employee.EmployeeRepository;
 
