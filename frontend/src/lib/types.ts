@@ -49,3 +49,19 @@ export interface LeaveBalanceResponse {
   usedDays: number;
   remainingDays: number;
 }
+
+export interface DailyAttendanceResponse {
+  date: string;
+  records: TimeRecord[];
+  totalMinutes: number;
+  overtimeMinutes: number;
+  nightMinutes: number;
+}
+
+export interface MonthlyAttendanceResponse {
+  yearMonth: string;
+  totalWorkMinutes: number;
+  totalOvertimeMinutes: number;
+  totalNightMinutes: number;
+  days: DailyAttendanceResponse[];
+}
