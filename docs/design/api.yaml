@@ -1,0 +1,733 @@
+openapi: 3.0.3
+info:
+  title: 勤怠管理システム API
+  version: 1.0.0
+  description: 社員の出退勤打刻、勤怠管理、休暇申請を管理する REST API
+
+servers:
+  - url: http://localhost:8080/api
+    description: ローカル開発
+
+tags:
+  - name: auth
+    description: 認証
+  - name: attendance
+    description: 打刻・勤怠
+  - name: leave
+    description: 休暇
+  - name: attendance-request
+    description: 打刻修正申請
+  - name: admin
+    description: 管理者機能
+  - name: employee
+    description: 社員情報
+
+paths:
+  # === 認証 ===
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: ログイン
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: 認証失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: ログインユーザー情報取得
+      operationId: getMe
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+
+  # === 打刻 ===
+  /attendance/clock-in:
+    post:
+      tags: [attendance]
+      summary: 出勤打刻
+      operationId: clockIn
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: 打刻成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeRecordResponse'
+        '409':
+          description: 既に出勤済み（未退勤のレコードが存在）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /attendance/clock-out:
+    post:
+      tags: [attendance]
+      summary: 退勤打刻
+      operationId: clockOut
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 打刻成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeRecordResponse'
+        '404':
+          description: 出勤打刻がない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /attendance/records:
+    get:
+      tags: [attendance]
+      summary: 自分の勤怠一覧取得
+      operationId: getMyRecords
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: yearMonth
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}$'
+            example: '2026-07'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyAttendanceResponse'
+
+  /attendance/status:
+    get:
+      tags: [attendance]
+      summary: 現在の打刻状態取得
+      operationId: getAttendanceStatus
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceStatusResponse'
+
+  # === 休暇 ===
+  /leave/requests:
+    get:
+      tags: [leave]
+      summary: 自分の休暇申請一覧取得
+      operationId: getMyLeaveRequests
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ApprovalStatus'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaveRequestResponse'
+    post:
+      tags: [leave]
+      summary: 休暇申請
+      operationId: applyLeave
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestCreateRequest'
+      responses:
+        '201':
+          description: 申請成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestResponse'
+        '400':
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
+  /leave/balance:
+    get:
+      tags: [leave]
+      summary: 有給残日数取得
+      operationId: getLeaveBalance
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveBalanceResponse'
+
+  # === 打刻修正申請 ===
+  /attendance-requests:
+    get:
+      tags: [attendance-request]
+      summary: 自分の打刻修正申請一覧取得
+      operationId: getMyAttendanceRequests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceRequestResponse'
+    post:
+      tags: [attendance-request]
+      summary: 打刻修正申請
+      operationId: submitAttendanceRequest
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceRequestCreateRequest'
+      responses:
+        '201':
+          description: 申請成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceRequestResponse'
+
+  # === 管理者 ===
+  /admin/department/attendance:
+    get:
+      tags: [admin]
+      summary: 部門の勤怠一覧取得
+      operationId: getDepartmentAttendance
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: yearMonth
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}$'
+        - name: employeeId
+          in: query
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmployeeAttendanceSummary'
+
+  /admin/attendance/{employeeId}/{recordId}:
+    put:
+      tags: [admin]
+      summary: 部下の勤怠修正（管理者直接）
+      operationId: modifyEmployeeAttendance
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: recordId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeRecordModifyRequest'
+      responses:
+        '200':
+          description: 修正成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeRecordResponse'
+
+  /admin/pending-requests:
+    get:
+      tags: [admin]
+      summary: 承認待ち申請一覧取得（休暇＋打刻修正）
+      operationId: getPendingRequests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingRequestsResponse'
+
+  /admin/leave-requests/{requestId}/approve:
+    post:
+      tags: [admin]
+      summary: 休暇申請承認
+      operationId: approveLeaveRequest
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 承認成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestResponse'
+
+  /admin/leave-requests/{requestId}/reject:
+    post:
+      tags: [admin]
+      summary: 休暇申請却下
+      operationId: rejectLeaveRequest
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 却下成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestResponse'
+
+  /admin/attendance-requests/{requestId}/approve:
+    post:
+      tags: [admin]
+      summary: 打刻修正申請承認
+      operationId: approveAttendanceRequest
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 承認成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceRequestResponse'
+
+  /admin/attendance-requests/{requestId}/reject:
+    post:
+      tags: [admin]
+      summary: 打刻修正申請却下
+      operationId: rejectAttendanceRequest
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 却下成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceRequestResponse'
+
+  /admin/export:
+    get:
+      tags: [admin]
+      summary: 勤怠データエクスポート（CSV/PDF）
+      operationId: exportAttendance
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: yearMonth
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}$'
+        - name: format
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [csv, pdf]
+      responses:
+        '200':
+          description: ファイルダウンロード
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # === Request ===
+    LoginRequest:
+      type: object
+      required: [employeeCode, password]
+      properties:
+        employeeCode:
+          type: string
+          example: "tanaka001"
+        password:
+          type: string
+          format: password
+
+    LeaveRequestCreateRequest:
+      type: object
+      required: [leaveType, startDate, endDate]
+      properties:
+        leaveType:
+          $ref: '#/components/schemas/LeaveType'
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          maxLength: 500
+
+    AttendanceRequestCreateRequest:
+      type: object
+      required: [requestType, workDate, requestedClockIn, reason]
+      properties:
+        requestType:
+          $ref: '#/components/schemas/AttendanceRequestType'
+        timeRecordId:
+          type: integer
+          format: int64
+        workDate:
+          type: string
+          format: date
+        requestedClockIn:
+          type: string
+          format: date-time
+        requestedClockOut:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          maxLength: 500
+
+    TimeRecordModifyRequest:
+      type: object
+      required: [clockIn]
+      properties:
+        clockIn:
+          type: string
+          format: date-time
+        clockOut:
+          type: string
+          format: date-time
+
+    # === Response ===
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        employee:
+          $ref: '#/components/schemas/EmployeeResponse'
+
+    EmployeeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        employeeCode:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        departmentName:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+
+    TimeRecordResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        workDate:
+          type: string
+          format: date
+        clockIn:
+          type: string
+          format: date-time
+        clockOut:
+          type: string
+          format: date-time
+        durationMinutes:
+          type: integer
+          description: 勤務時間（分）
+
+    AttendanceStatusResponse:
+      type: object
+      properties:
+        isClockedIn:
+          type: boolean
+        currentRecord:
+          $ref: '#/components/schemas/TimeRecordResponse'
+        todayRecords:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeRecordResponse'
+        todayTotalMinutes:
+          type: integer
+
+    MonthlyAttendanceResponse:
+      type: object
+      properties:
+        yearMonth:
+          type: string
+        totalWorkMinutes:
+          type: integer
+        totalOvertimeMinutes:
+          type: integer
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyAttendanceResponse'
+
+    DailyAttendanceResponse:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeRecordResponse'
+        totalMinutes:
+          type: integer
+        overtimeMinutes:
+          type: integer
+        isNightWork:
+          type: boolean
+
+    LeaveRequestResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        leaveType:
+          $ref: '#/components/schemas/LeaveType'
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        days:
+          type: number
+          format: double
+        reason:
+          type: string
+        status:
+          $ref: '#/components/schemas/ApprovalStatus'
+        approverName:
+          type: string
+        approvedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    LeaveBalanceResponse:
+      type: object
+      properties:
+        totalDays:
+          type: number
+          format: double
+        usedDays:
+          type: number
+          format: double
+        remainingDays:
+          type: number
+          format: double
+
+    AttendanceRequestResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        requestType:
+          $ref: '#/components/schemas/AttendanceRequestType'
+        workDate:
+          type: string
+          format: date
+        requestedClockIn:
+          type: string
+          format: date-time
+        requestedClockOut:
+          type: string
+          format: date-time
+        reason:
+          type: string
+        status:
+          $ref: '#/components/schemas/ApprovalStatus'
+        createdAt:
+          type: string
+          format: date-time
+
+    EmployeeAttendanceSummary:
+      type: object
+      properties:
+        employee:
+          $ref: '#/components/schemas/EmployeeResponse'
+        totalWorkMinutes:
+          type: integer
+        totalOvertimeMinutes:
+          type: integer
+        workDays:
+          type: integer
+
+    PendingRequestsResponse:
+      type: object
+      properties:
+        leaveRequests:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaveRequestResponse'
+        attendanceRequests:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceRequestResponse'
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    # === Enum ===
+    Role:
+      type: string
+      enum: [EMPLOYEE, MANAGER]
+
+    LeaveType:
+      type: string
+      enum: [PAID, HALF_DAY, SPECIAL]
+
+    ApprovalStatus:
+      type: string
+      enum: [PENDING, APPROVED, REJECTED]
+
+    AttendanceRequestType:
+      type: string
+      enum: [MODIFY, ADD, DELETE]
