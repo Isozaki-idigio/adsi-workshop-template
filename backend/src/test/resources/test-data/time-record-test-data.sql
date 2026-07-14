@@ -1,0 +1,3 @@
+INSERT INTO departments (id, name, created_at, updated_at) VALUES (100, 'テスト部_TR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO employees (id, employee_code, name, email, password_hash, department_id, role, created_at, updated_at) VALUES (101, 'TR_EMP001', 'TR田中', 'tr_tanaka@example.com', '$2a$10$dummy', 100, 'EMPLOYEE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO employees (id, employee_code, name, email, password_hash, department_id, role, created_at, updated_at) VALUES (102, 'TR_EMP002', 'TR鈴木', 'tr_suzuki@example.com', '$2a$10$dummy', 100, 'EMPLOYEE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);

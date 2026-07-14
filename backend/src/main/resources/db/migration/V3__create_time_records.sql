@@ -10,4 +10,4 @@ CREATE TABLE time_records (
     CONSTRAINT fk_time_records_employee FOREIGN KEY (employee_id) REFERENCES employees(id)
 );
 
-CREATE INDEX idx_time_records_employee_date ON time_records(employee_id, work_date);
+CREATE INDEX idx_time_records_employee_date ON time_records (employee_id, work_date);
