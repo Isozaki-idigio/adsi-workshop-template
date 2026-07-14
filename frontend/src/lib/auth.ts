@@ -1,5 +1,5 @@
 import { Employee } from './types';
-import { apiClient } from './api-client';
+import { apiClient, withBasePath } from './api-client';
 
 const TOKEN_KEY = 'attendance_token';
 
@@ -42,5 +42,5 @@ export async function fetchMe(): Promise<Employee> {
 
 export function logout(): void {
   clearToken();
-  window.location.href = '/login';
+  window.location.href = withBasePath('/login');
 }

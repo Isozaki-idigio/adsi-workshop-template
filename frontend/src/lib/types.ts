@@ -55,13 +55,12 @@ export interface DailyAttendanceResponse {
   records: TimeRecord[];
   totalMinutes: number;
   overtimeMinutes: number;
-  nightMinutes: number;
+  isNightWork: boolean;
 }
 
 export interface MonthlyAttendanceResponse {
   yearMonth: string;
   totalWorkMinutes: number;
   totalOvertimeMinutes: number;
-  totalNightMinutes: number;
-  days: DailyAttendanceResponse[];
+  records: DailyAttendanceResponse[];
 }

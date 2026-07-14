@@ -38,7 +38,9 @@ public class LeaveServiceImpl implements LeaveService {
         BigDecimal days = calculateDays(request);
 
         if (request.leaveType() != LeaveType.SPECIAL) {
-            var employee = employeeRepository.getReferenceById(employeeId);
+            var employee = employeeRepository.findById(employeeId)
+                    .orElseThrow(() -> new BusinessException(
+                            HttpStatus.NOT_FOUND, "EMPLOYEE_NOT_FOUND", "社員が見つかりません"));
             BigDecimal used = leaveRequestRepository.sumApprovedDaysByEmployeeIdAndLeaveTypes(
                     employeeId, PAID_TYPES);
             BigDecimal remaining = employee.getAnnualLeaveDays().subtract(used);
@@ -65,8 +67,11 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public LeaveBalanceResponse getBalance(Long employeeId) {
-        var employee = employeeRepository.getReferenceById(employeeId);
+        var employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new BusinessException(
+                        HttpStatus.NOT_FOUND, "EMPLOYEE_NOT_FOUND", "社員が見つかりません"));
         BigDecimal total = employee.getAnnualLeaveDays();
         BigDecimal used = leaveRequestRepository.sumApprovedDaysByEmployeeIdAndLeaveTypes(
                 employeeId, PAID_TYPES);

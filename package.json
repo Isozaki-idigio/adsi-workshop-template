@@ -1,0 +1,14 @@
+{
+  "name": "attendance-system",
+  "private": true,
+  "scripts": {
+    "setup": "cd backend && ./gradlew build -x test && cd ../frontend && npm install",
+    "boot": "cd backend && ./gradlew bootRun --args='--spring.profiles.active=local'",
+    "boot:workshop": "cd backend && ./gradlew bootRun --args='--spring.profiles.active=local'",
+    "dev": "cd frontend && npm run dev",
+    "dev:sagemaker": "bash scripts/dev-sagemaker.sh",
+    "dev:sagemaker:stop": "bash scripts/dev-sagemaker-stop.sh",
+    "check:backend": "cd backend && ./gradlew test",
+    "lint:frontend": "cd frontend && npx next build"
+  }
+}

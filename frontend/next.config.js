@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
+const isSagemaker = process.env.SAGEMAKER === '1';
+const basePath = isSagemaker ? '/codeeditor/default/absports/3000' : '';
+
 const nextConfig = {
-  basePath: '',
+  basePath,
+  assetPrefix: basePath || undefined,
+  skipTrailingSlashRedirect: isSagemaker,
   async rewrites() {
     return [
       {

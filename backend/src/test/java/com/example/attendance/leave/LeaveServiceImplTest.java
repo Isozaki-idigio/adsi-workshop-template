@@ -47,7 +47,7 @@ class LeaveServiceImplTest {
                 .id(1L)
                 .annualLeaveDays(new BigDecimal("12.0"))
                 .build();
-        when(employeeRepository.getReferenceById(1L)).thenReturn(employee);
+        when(employeeRepository.findById(1L)).thenReturn(java.util.Optional.of(employee));
         when(leaveRequestRepository.sumApprovedDaysByEmployeeIdAndLeaveTypes(any(), any()))
                 .thenReturn(new BigDecimal("3.0"));
         when(leaveRequestRepository.save(any(LeaveRequest.class)))
@@ -77,7 +77,7 @@ class LeaveServiceImplTest {
                 .id(1L)
                 .annualLeaveDays(new BigDecimal("12.0"))
                 .build();
-        when(employeeRepository.getReferenceById(1L)).thenReturn(employee);
+        when(employeeRepository.findById(1L)).thenReturn(java.util.Optional.of(employee));
         when(leaveRequestRepository.sumApprovedDaysByEmployeeIdAndLeaveTypes(any(), any()))
                 .thenReturn(BigDecimal.ZERO);
         when(leaveRequestRepository.save(any(LeaveRequest.class)))
@@ -105,7 +105,7 @@ class LeaveServiceImplTest {
                 .id(1L)
                 .annualLeaveDays(new BigDecimal("12.0"))
                 .build();
-        when(employeeRepository.getReferenceById(1L)).thenReturn(employee);
+        when(employeeRepository.findById(1L)).thenReturn(java.util.Optional.of(employee));
         when(leaveRequestRepository.sumApprovedDaysByEmployeeIdAndLeaveTypes(any(), any()))
                 .thenReturn(new BigDecimal("11.5"));
 
@@ -148,7 +148,7 @@ class LeaveServiceImplTest {
                 .id(1L)
                 .annualLeaveDays(new BigDecimal("12.0"))
                 .build();
-        when(employeeRepository.getReferenceById(1L)).thenReturn(employee);
+        when(employeeRepository.findById(1L)).thenReturn(java.util.Optional.of(employee));
         when(leaveRequestRepository.sumApprovedDaysByEmployeeIdAndLeaveTypes(any(), any()))
                 .thenReturn(new BigDecimal("3.5"));
 
